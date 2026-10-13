@@ -2,13 +2,13 @@
 
 로컬 HTML·문서·웹 프로젝트를 **Claude artifacts**와 **ChatGPT Pages/Sites**로 발행·갱신하는 Agent Skills 묶음.
 
-새 서버나 도구를 구현하는 extension이 아니라, 에이전트에게 기존 CLI 호출 방법과 안전 규칙을 알려주는 두 개의 스킬이다. 현재 저장소는 Claude Code 플러그인 마켓플레이스 구조이며, Pi에서도 스킬 경로를 지정해 사용할 수 있다.
+새 서버나 도구를 구현하는 extension이 아니라, 에이전트에게 기존 CLI 호출 방법과 안전 규칙을 알려주는 두 개의 스킬이다. Claude artifact 스킬에는 읽기용 페이지 템플릿과 Markdown 변환 설정이 함께 들어 있다. 현재 저장소는 Claude Code 플러그인 마켓플레이스 구조이며, Pi에서도 스킬 경로를 지정해 사용할 수 있다.
 
 ## 할 수 있는 일
 
 | 대상 | 입력과 용도 | 실행 경로 |
 |---|---|---|
-| Claude artifact | HTML·Markdown·CSV·JSON·YAML 등을 링크로 발행, 기존 artifact 갱신·조회 | `claude-artifacts` CLI |
+| Claude artifact | Markdown 보고서를 읽기용 페이지(목차·표 스크롤·다크 모드)로 발행하고 diagram-design 그림을 함께 넣음. HTML·CSV·JSON·YAML 발행, 기존 artifact 갱신·조회 | `marked` 변환 + `claude-artifacts` CLI |
 | ChatGPT Page | Markdown 보고서·문서를 비공개 페이지로 생성·수정 | Codex CLI의 `chatgpt_space.*` 도구 |
 | ChatGPT Site | 웹 프로젝트를 비공개 사이트로 배포하거나 버전만 저장 | Codex CLI의 `sites.*` 도구 |
 
@@ -51,7 +51,7 @@ claude plugin install ai-publish@ai-publish
 
 ## 필요한 환경
 
-- **Claude artifact:** Node.js/npm의 `npx`, Claude Code, `claude /login` 완료(Pro/Max/Team/Enterprise). `claude-artifacts@0.1.14`를 버전 고정해 사용한다.
+- **Claude artifact:** Node.js/npm의 `npx`, Claude Code, `claude /login` 완료(Pro/Max/Team/Enterprise). `claude-artifacts@0.1.14`, Markdown 변환용 `marked@18.1.1`·`marked-cjk-friendly@0.1.2`를 버전 고정해 `npx`로 받는다. 그림을 넣으려면 diagram-design 스킬과 SVG 추출용 `python3`가 필요하다.
 - **ChatGPT Page/Site:** Codex CLI, ChatGPT 계정으로 `codex login`, `apps=true`. Site에는 `sites@openai-curated-remote` 플러그인 활성화도 필요하다.
 - **Pi에서 사용:** 위 서비스별 준비와 별개로 Pi가 설치되어 있어야 한다. 이 스킬 묶음 자체에는 빌드 단계나 서버가 없다.
 
