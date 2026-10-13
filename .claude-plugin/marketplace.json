@@ -7,9 +7,20 @@
     {
       "name": "ai-publish",
       "description": "로컬 HTML/MD를 읽기용 페이지로 Claude artifact 발행·갱신(그림은 diagram-design), Codex CLI 경유 ChatGPT Pages/Sites 발행",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "category": "productivity",
       "source": "./plugins/ai-publish"
+    },
+    {
+      "name": "diagram-design",
+      "description": "Editorial diagrams as self-contained HTML + SVG (upstream cathrynlavery/diagram-design, MIT). ai-publish depends on it for artifact and Pages figures",
+      "category": "productivity",
+      "source": {
+        "source": "github",
+        "repo": "cathrynlavery/diagram-design",
+        "ref": "main",
+        "sha": "0a8ea20ae69b33a5edce6018eedd3a9d26e90c1c"
+      }
     }
   ]
 }

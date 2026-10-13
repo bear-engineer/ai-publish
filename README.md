@@ -2,14 +2,14 @@
 
 로컬 HTML·문서·웹 프로젝트를 **Claude artifacts**와 **ChatGPT Pages/Sites**로 발행·갱신하는 Agent Skills 묶음.
 
-새 서버나 도구를 구현하는 extension이 아니라, 에이전트에게 기존 CLI 호출 방법과 안전 규칙을 알려주는 두 개의 스킬이다. Claude artifact 스킬에는 읽기용 페이지 템플릿과 Markdown 변환 설정이 함께 들어 있다. 현재 저장소는 Claude Code 플러그인 마켓플레이스 구조이며, Pi에서도 스킬 경로를 지정해 사용할 수 있다.
+새 서버나 도구를 구현하는 extension이 아니라, 에이전트에게 기존 CLI 호출 방법과 안전 규칙을 알려주는 두 개의 스킬이다. Claude artifact 스킬에는 읽기용 페이지 템플릿과 Markdown 변환 설정이 함께 들어 있다. 그림은 [diagram-design](https://github.com/cathrynlavery/diagram-design)(MIT)으로 그리며, 이 저장소에 복사하지 않고 마켓플레이스 의존성으로 설치한다. 현재 저장소는 Claude Code 플러그인 마켓플레이스 구조이며, omp와 Pi에서도 쓸 수 있다.
 
 ## 할 수 있는 일
 
 | 대상 | 입력과 용도 | 실행 경로 |
 |---|---|---|
-| Claude artifact | Markdown 보고서를 읽기용 페이지(목차·표 스크롤·다크 모드)로 발행하고 diagram-design 그림을 함께 넣음. HTML·CSV·JSON·YAML 발행, 기존 artifact 갱신·조회 | `marked` 변환 + `claude-artifacts` CLI |
-| ChatGPT Page | Markdown 보고서·문서를 비공개 페이지로 생성·수정 | Codex CLI의 `chatgpt_space.*` 도구 |
+| Claude artifact | Markdown 보고서를 읽기용 페이지로 발행. 넓은 화면은 왼쪽 고정 목차, 모바일은 목차 버튼과 바텀시트, 표 스크롤, 다크 모드. 긴 문서는 수치 카드와 diagram-design 그림(40가지 넘는 타입)으로 시각화. HTML·CSV·JSON·YAML 발행, 기존 artifact 갱신·조회 | `marked` 변환 + `claude-artifacts` CLI |
+| ChatGPT Page | Markdown 보고서·문서를 비공개 페이지로 생성·수정. 긴 문서는 콜아웃과 diagram-design 그림(Visualize 임베드)으로 시각화 | Codex CLI의 `chatgpt_space.*` 도구 |
 | ChatGPT Site | 웹 프로젝트를 비공개 사이트로 배포하거나 버전만 저장 | Codex CLI의 `sites.*` 도구 |
 
 기본은 비공개 생성이다. 공개·외부 공유는 별도 요청과 공유 범위 확인이 필요하다.
@@ -21,10 +21,11 @@
 저장소를 받은 뒤 루트에서 실행한다.
 
 ```sh
+pi install https://github.com/cathrynlavery/diagram-design   # 그림용, 한 번만
 pi --skill ./plugins/ai-publish/skills
 ```
 
-이 명령은 해당 실행에서 두 스킬을 로드한다. Pi 0.87.1에서 실제 스킬 탐색과 명령 등록을 확인했다. 서비스 로그인과 원격 발행 성공까지 보장하는 것은 아니다.
+`pi --skill`은 해당 실행에서 두 스킬을 로드한다. Pi 0.87.1의 격리된 설정에서 diagram-design 설치와 세 스킬(`chatgpt-publish`, `claude-artifact-publish`, `diagram-design`) 등록을 확인했다. 서비스 로그인과 원격 발행 성공까지 보장하는 것은 아니다.
 
 Pi에서 자연어로 요청하거나 스킬을 직접 지정한다.
 
@@ -38,7 +39,7 @@ Pi에서 자연어로 요청하거나 스킬을 직접 지정한다.
 
 ### Claude Code
 
-GitHub 마켓플레이스를 등록하고 플러그인을 설치한다. 로컬 clone이나 저장소 루트에서 실행할 필요가 없다.
+GitHub 마켓플레이스를 등록하고 플러그인을 설치한다. 로컬 clone이나 저장소 루트에서 실행할 필요가 없다. diagram-design은 의존성으로 함께 설치된다(`+ 1 dependency: diagram-design`).
 
 ```sh
 claude plugin marketplace add bear-engineer/ai-publish
@@ -49,9 +50,21 @@ claude plugin install ai-publish@ai-publish
 
 `claude plugin marketplace add .`는 로컬 checkout의 변경을 시험하는 개발용이다. 공개 저장소에서 설치할 때는 위 GitHub 경로를 사용한다.
 
+diagram-design은 upstream의 특정 커밋으로 고정되어 있다. upstream 마켓플레이스판(`diagram-design@diagram-design`)을 이미 설치했다면 같은 스킬이 두 벌이 되므로 그쪽을 제거한다. `diagram-design@ai-publish`를 끄면 `ai-publish`도 불러오지 않는다.
+
+### omp
+
+omp 마켓플레이스는 Claude Code 형식을 읽지만 의존성은 설치하지 않으므로 diagram-design을 함께 설치한다.
+
+```sh
+omp plugin marketplace add bear-engineer/ai-publish
+omp plugin install ai-publish@ai-publish
+omp plugin install diagram-design@ai-publish
+```
+
 ## 필요한 환경
 
-- **Claude artifact:** Node.js/npm의 `npx`, Claude Code, `claude /login` 완료(Pro/Max/Team/Enterprise). `claude-artifacts@0.1.14`, Markdown 변환용 `marked@18.1.1`·`marked-cjk-friendly@0.1.2`를 버전 고정해 `npx`로 받는다. 그림을 넣으려면 diagram-design 스킬과 SVG 추출용 `python3`가 필요하다.
+- **Claude artifact:** Node.js/npm의 `npx`, Claude Code, `claude /login` 완료(Pro/Max/Team/Enterprise). `claude-artifacts@0.1.14`, Markdown 변환용 `marked@18.1.1`·`marked-cjk-friendly@0.1.2`를 버전 고정해 `npx`로 받는다. 그림에는 diagram-design 스킬(위 설치 단계)과 SVG 추출용 `python3`가 필요하다.
 - **ChatGPT Page/Site:** Codex CLI, ChatGPT 계정으로 `codex login`, `apps=true`. Site에는 `sites@openai-curated-remote` 플러그인 활성화도 필요하다.
 - **Pi에서 사용:** 위 서비스별 준비와 별개로 Pi가 설치되어 있어야 한다. 이 스킬 묶음 자체에는 빌드 단계나 서버가 없다.
 

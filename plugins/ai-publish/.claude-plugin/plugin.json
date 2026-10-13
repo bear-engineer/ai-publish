@@ -1,6 +1,7 @@
 {
   "name": "ai-publish",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Claude artifact 발행(claude-artifacts CLI, 읽기용 페이지 템플릿·diagram-design 그림) + ChatGPT Pages/Sites 발행(codex exec)",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": ["diagram-design"]
 }
