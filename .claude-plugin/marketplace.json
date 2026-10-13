@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ai-publish",
+  "owner": { "name": "teddy" },
+  "metadata": { "description": "omp에서 Claude artifacts / ChatGPT Sites·Pages 발행" },
+  "plugins": [
+    {
+      "name": "ai-publish",
+      "description": "로컬 HTML/MD를 Claude artifact로 발행·갱신, ChatGPT Sites/Pages 핸드오프 절차",
+      "version": "0.1.0",
+      "category": "productivity",
+      "source": "./plugins/ai-publish"
+    }
+  ]
+}

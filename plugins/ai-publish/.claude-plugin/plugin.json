@@ -1,0 +1,6 @@
+{
+  "name": "ai-publish",
+  "version": "0.1.0",
+  "description": "Claude artifact 발행(claude-artifacts CLI) + ChatGPT Sites/Pages 핸드오프",
+  "license": "MIT"
+}
