@@ -38,14 +38,16 @@ Pi에서 자연어로 요청하거나 스킬을 직접 지정한다.
 
 ### Claude Code
 
-저장소 루트에서 로컬 마켓플레이스를 등록하고 플러그인을 설치한다.
+GitHub 마켓플레이스를 등록하고 플러그인을 설치한다. 로컬 clone이나 저장소 루트에서 실행할 필요가 없다.
 
 ```sh
-claude plugin marketplace add .
+claude plugin marketplace add bear-engineer/ai-publish
 claude plugin install ai-publish@ai-publish
 ```
 
 설치 명령은 Claude Code의 사용자 설정을 변경한다. 설치 후 새 세션에서 “이 파일을 Claude artifact로 올려줘” 또는 “이 보고서를 ChatGPT Page로 발행해줘”처럼 요청한다.
+
+`claude plugin marketplace add .`는 로컬 checkout의 변경을 시험하는 개발용이다. 공개 저장소에서 설치할 때는 위 GitHub 경로를 사용한다.
 
 ## 필요한 환경
 
