@@ -8,7 +8,7 @@
 
 | 대상 | 입력과 용도 | 실행 경로 |
 |---|---|---|
-| Claude artifact | Markdown 보고서를 읽기용 페이지로 발행. 넓은 화면은 왼쪽 고정 목차, 모바일은 목차 버튼과 바텀시트, 표 스크롤, 다크 모드. 긴 문서는 수치 카드와 diagram-design 그림(40가지 넘는 타입)으로 시각화. HTML·CSV·JSON·YAML 발행, 기존 artifact 갱신·조회 | `marked` 변환 + `claude-artifacts` CLI |
+| Claude artifact | Markdown 보고서를 읽기용 페이지로 발행. 넓은 화면은 왼쪽 고정 목차, 모바일은 목차 버튼과 바텀시트, 표 스크롤, 다크 모드. 긴 문서는 수치 카드와 diagram-design 그림(상황에 맞춰 고르는 45가지 타입)으로 시각화. HTML·CSV·JSON·YAML 발행, 기존 artifact 갱신·조회 | `marked` 변환 + `claude-artifacts` CLI |
 | ChatGPT Page | Markdown 보고서·문서를 비공개 페이지로 생성·수정. 긴 문서는 콜아웃과 diagram-design 그림(Visualize 임베드)으로 시각화 | Codex CLI의 `chatgpt_space.*` 도구 |
 | ChatGPT Site | 웹 프로젝트를 비공개 사이트로 배포하거나 버전만 저장 | Codex CLI의 `sites.*` 도구 |
 

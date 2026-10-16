@@ -46,31 +46,43 @@ $A create /tmp/report.html --title "<문서의 H1>" --label "<YYYY-MM-DD>"
 
 ## 긴 문서는 인포그래픽으로
 
-본문이 길면(대략 3,000자 이상이거나 `##` 섹션 5개 이상) 발행 전에 섹션마다 그림·표·수치 카드로 보이면 더 빨리 읽히는지 따진다. diagram-design에는 40가지가 넘는 타입이 있으니 흐름도와 막대에 머물지 말고 내용에 맞는 타입을 고른다([갤러리](https://cathrynlavery.github.io/diagram-design/)). 문단이나 표로 충분한 내용은 그리지 않는다.
+본문이 길면(대략 3,000자 이상이거나 `##` 섹션 5개 이상) 발행 전에 섹션마다 그림·표·수치 카드로 보이면 더 빨리 읽히는지 따진다. diagram-design에는 45가지 타입이 있으니 흐름도와 막대에 머물지 말고 아래 표에서 내용에 맞는 타입을 고른다. 표의 영문 설명은 upstream README 그대로이며, 모양은 [갤러리](https://cathrynlavery.github.io/diagram-design/)에서 본다. 문단이나 표로 충분한 내용은 그리지 않는다.
 
-| 원문에 있는 것 | 쓸 것 |
+| 원문에 있는 것 | 쓸 것 (README 설명) |
 |---|---|
 | 대표 수치 2~4개 | 첫머리 수치 카드(아래) |
-| 항목별 수치 비교 | Bar. 정확한 값 조회가 목적이면 표 |
-| 시간 추이, 두 시점 비교, 순위 변화 | Line(slopegraph·bump 변형 포함) |
-| 시작값에서 끝값까지 증감 분해 | Waterfall |
-| 구성비, 단계별 이탈 | Treemap, Pyramid/funnel |
-| 단계를 거치며 갈라지고 합쳐지는 양 | Sankey |
-| 두 기준의 교차 강도, 두 변수의 관계 | Heatmap, Scatter |
-| 여러 대상의 다기준 점수, 2축 우선순위 | Radar, Quadrant |
-| 사건·마일스톤, 기간이 있는 일정 | Timeline, Gantt |
-| 조건 분기와 판단 절차 | Flowchart |
-| 부서·역할을 오가는 절차, 주체별 단계와 산출물 | Swimlane, Process |
-| 시스템 사이의 호출 순서 | Sequence |
-| 상태와 전이(주문·티켓·배포 상태) | State machine |
-| 구성 요소와 연결, 구조 변경 전후, 실행 위치 | Architecture, Architecture delta, Deployment |
-| 의존 관계, 계층 분해, 조직·담당 | Dependency graph, Tree, Org chart |
-| 계층별 통제, 포함 관계, 집합 겹침 | Layer stack, Nested, Venn |
-| 원인 분석, 반복 강화 고리 | Fishbone, Loop |
-| 사용자 경험 단계, 진행 중 작업, 릴리스 범위 | User journey, Kanban, Story map |
-| 데이터 모델, 데이터 플랫폼 흐름 | ER, Database schema, Data flow, Medallion |
+| 항목별 수치 비교 | Bar chart (Categorical comparison). 정확한 값 조회가 목적이면 표 |
+| 시간 추이, 두 시점 비교, 순위 변화 | Line chart (Trends over time; slopegraph·ridgeline·streamgraph·bump 변형) |
+| 시작값에서 끝값까지 증감 분해 | Waterfall (Running total + signed bridges) |
+| 구성비, 순위 계층·단계별 이탈 | Treemap (Part-of-whole by area; marimekko 변형), Pyramid / funnel (Ranked hierarchy or drop-off) |
+| 갈라지고 합쳐지는 양 | Sankey (Quantities that split + merge) |
+| 행×열 값, 분포·상관 | Heatmap (Value per row × column cell), Scatter plot (Distribution + correlation; bubble·beeswarm 변형) |
+| 다기준 비교, 2축 위치, 주기적 크기 | Radar / spider (Multi-axis comparison), Quadrant (Two-axis positioning), Polar chart (Cyclic magnitude · linear radius) |
+| 사건·마일스톤, 기간 일정 | Timeline (Events on an axis), Gantt (Tasks + phases on a timeline) |
+| 조건 분기와 판단 | Flowchart (Decision logic) |
+| 부서·역할을 오가는 절차 | Swimlane (Cross-functional flow), Process (Multi-actor sequential workflow) |
+| 고객 접점과 뒤편 지원 절차 | Service blueprint (Frontstage and backstage on a shared stage grid) |
+| 시스템 간 호출 순서 | Sequence (Messages over time) |
+| 상태와 전이 | State machine (States + transitions) |
+| 구성 요소와 연결, 변경 전후 | Architecture (Components + connections), Architecture delta (Before · Changes · After topology) |
+| 전체 스택 개요, 레거시 현황 | High-Level (End-to-end stack on a cluster), IT current-state (Legacy landscape + modernization) |
+| 실행 위치 | Deployment (Zones, hosts + artifacts) |
+| 의존 관계, 클래스 구조 | Dependency graph (Fan-in, ranks + cycles), UML class (Classes, operations + typed relations) |
+| 부모→자식 분해, 조직·담당 | Tree (Parent → children), Org chart (Ownership + routing) |
+| 추상화 계층 | Layer stack (Stacked abstractions) |
+| 포함 관계 | Nested (Hierarchy by containment) |
+| 한 대상의 부품·층을 떼어 보이기(분해도, 조립 순서) | Exploded axonometric (Parts pulled apart on one axis) |
+| 한 층·부지를 비스듬히 위에서 본 배치 | Axonometric plan (Rooms and buildings on one plate) |
+| 집합 겹침 | Venn (Set overlap) |
+| 원인 분석, 강화 고리 | Fishbone (Grouped causes → one effect), Loop / flywheel (Reinforcing cycle + shared hub) |
+| 가치 사슬과 진화 단계 | Wardley map (Value chain × evolution) |
+| 사용자 경험, 진행 중 작업, 릴리스 범위 | User journey (Stages, actions + sentiment), Kanban (Work in progress by state), Story map (Backbone × release slices) |
+| 데이터 모델 | ER / data model (Entities + fields), Database schema (Physical tables + column FKs) |
+| 데이터 플랫폼 | Data flow (Role-scoped pipeline steps), Medallion (Multi-tier data storage), DP integration (Sources → core → consumers), DP security matrix (Per-role access permissions) |
 
-대기열·병목, 정책 통과·실패, 신뢰 경계, 통제 위치, 생애주기처럼 동작이 핵심이면 diagram-design의 semantic pattern을 먼저 고른다.
+계층 구조는 계층의 성격으로 고른다. 쌓인 추상화는 Layer stack, 포함은 Nested, 부모→자식은 Tree, 보고 체계는 Org chart, 순위는 Pyramid, 한 대상을 층·부품으로 분해해 보여 주는 것은 Exploded axonometric이다. 표에 딱 맞는 행이 없으면 diagram-design `SKILL.md`의 타입 선택표를 따른다. 대기열·병목, 정책 통과·실패, 신뢰 경계, 통제 위치, 생애주기처럼 동작이 핵심이면 diagram-design의 semantic pattern을 먼저 고른다.
+
+타입마다 minimal light, minimal dark, full-editorial 세 변형이 있다. 페이지 안 그림은 minimal light를 `<slug>.svg`로, minimal dark를 `<slug>-dark.svg`로 짝지어 넣는다. full-editorial은 제목·설명이 붙은 단독 그림이라, 그림 하나가 문서 전체인 경우에만 쓴다.
 
 - 대표 수치는 첫 요약 문단 바로 뒤에, 그림은 그 그림이 설명하는 문단 바로 뒤에 둔다. 섹션 하나에 그림 하나가 기본이고, 노드가 9개를 넘으면 개요 그림과 상세 그림으로 나눈다.
 - 캡션에는 제목 대신 읽어야 할 결론을 쓴다. 예: "실패 18건 중 11건이 설정 드리프트".

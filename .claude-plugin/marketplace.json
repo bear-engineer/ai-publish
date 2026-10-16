@@ -7,7 +7,7 @@
     {
       "name": "ai-publish",
       "description": "로컬 HTML/MD를 읽기용 페이지로 Claude artifact 발행·갱신(그림은 diagram-design), Codex CLI 경유 ChatGPT Pages/Sites 발행",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "category": "productivity",
       "source": "./plugins/ai-publish"
     },
