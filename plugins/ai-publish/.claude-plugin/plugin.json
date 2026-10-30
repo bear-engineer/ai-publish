@@ -1,7 +1,7 @@
 {
   "name": "ai-publish",
-  "version": "0.3.2",
-  "description": "Claude artifact 발행(claude-artifacts CLI, 읽기용 페이지 템플릿·diagram-design 그림) + ChatGPT Pages/Sites 발행(codex exec)",
+  "version": "0.4.2",
+  "description": "Claude artifact 발행(네이티브 Artifact 또는 claude-artifacts CLI, 읽기용 페이지 템플릿·diagram-design 그림) + ChatGPT Pages/Sites 발행(Codex 도구 직접, Herdr ho, codex exec 대안). 영수증·readback 확인",
   "license": "MIT",
   "dependencies": ["diagram-design"]
 }

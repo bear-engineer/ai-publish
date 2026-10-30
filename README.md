@@ -2,19 +2,48 @@
 
 로컬 HTML·문서·웹 프로젝트를 **Claude artifacts**와 **ChatGPT Pages/Sites**로 발행·갱신하는 Agent Skills 묶음.
 
-새 서버나 도구를 구현하는 extension이 아니라, 에이전트에게 기존 CLI 호출 방법과 안전 규칙을 알려주는 두 개의 스킬이다. Claude artifact 스킬에는 읽기용 페이지 템플릿과 Markdown 변환 설정이 함께 들어 있다. 그림은 [diagram-design](https://github.com/cathrynlavery/diagram-design)(MIT)으로 그리며, 이 저장소에 복사하지 않고 마켓플레이스 의존성으로 설치한다. 현재 저장소는 Claude Code 플러그인 마켓플레이스 구조이며, omp와 Pi에서도 쓸 수 있다.
+새 서버나 도구를 구현하는 extension이 아니라, 에이전트에게 발행 경로와 안전 규칙을 알려주는 두 개의 스킬이다. Claude artifact 스킬에는 읽기용 페이지 템플릿과 Markdown 변환 설정, 두 스킬이 함께 쓰는 발행 공통 절차가 들어 있다. 그림은 [diagram-design](https://github.com/cathrynlavery/diagram-design)(MIT)으로 그리며, 이 저장소에 복사하지 않고 마켓플레이스 의존성으로 설치한다. 현재 저장소는 Claude Code 플러그인 마켓플레이스 구조이며, Codex·omp·Pi에서도 쓸 수 있다.
+
+에이전트는 자기 세션에 실제로 있는 도구로 직접 발행한다. Codex는 Pages·Sites 플러그인 도구를, Claude Code는 네이티브 `Artifact` 도구가 있을 때 그것을 쓴다. 자기 도구로 못 하는 대상은 Herdr 패널 안이고 `ho`가 설치돼 있으면 ho로 맡기고(Pages는 Codex, artifact는 Claude), 아니면 `codex exec`나 `claude-artifacts` CLI로 발행한다.
 
 ## 할 수 있는 일
 
 | 대상 | 입력과 용도 | 실행 경로 |
 |---|---|---|
-| Claude artifact | Markdown 보고서를 읽기용 페이지로 발행. 넓은 화면은 왼쪽 고정 목차, 모바일은 목차 버튼과 바텀시트, 표 스크롤, 다크 모드. 긴 문서는 수치 카드와 diagram-design 그림(상황에 맞춰 고르는 45가지 타입)으로 시각화. HTML·CSV·JSON·YAML 발행, 기존 artifact 갱신·조회 | `marked` 변환 + `claude-artifacts` CLI |
-| ChatGPT Page | Markdown 보고서·문서를 비공개 페이지로 생성·수정. 긴 문서는 콜아웃과 diagram-design 그림(Visualize 임베드)으로 시각화 | Codex CLI의 `chatgpt_space.*` 도구 |
-| ChatGPT Site | 웹 프로젝트를 비공개 사이트로 배포하거나 버전만 저장 | Codex CLI의 `sites.*` 도구 |
+| Claude artifact | Markdown 보고서를 읽기용 페이지로 발행. 넓은 화면은 왼쪽 고정 목차, 모바일은 목차 버튼과 바텀시트, 표 스크롤, 다크 모드. 긴 문서는 수치 카드와 diagram-design 그림(상황에 맞춰 고르는 45가지 타입)으로 시각화. HTML·CSV·JSON·YAML 발행, 기존 artifact 갱신·조회 | `marked` 변환 후 Claude Code의 네이티브 `Artifact` 도구(있을 때만) 또는 `claude-artifacts` CLI. Codex·omp·Pi는 ho로 Claude에 맡기거나 같은 CLI |
+| ChatGPT Page | Markdown 보고서·문서를 비공개 페이지로 생성·수정. 긴 문서는 콜아웃과 diagram-design 그림(Visualize 임베드)으로 시각화 | Codex의 Pages 플러그인 도구. Claude Code·omp·Pi는 ho로 Codex에 맡기거나 `codex exec` |
+| ChatGPT Site | 웹 프로젝트를 비공개 사이트로 배포하거나 버전만 저장 | Codex의 Sites 플러그인 도구. 다른 호스트는 `codex exec`(ho 대상 아님) |
 
 기본은 비공개 생성이다. 공개·외부 공유는 별도 요청과 공유 범위 확인이 필요하다.
 
+## 발행 흐름과 기록
+
+규칙의 정본은 [발행 공통 절차](plugins/ai-publish/skills/claude-artifact-publish/references/publish-flow.md)다.
+
+- **작성과 발행은 별개다.** "써 줘"만 요청하면 로컬 Markdown까지만 만든다. 정본은 한국어 Markdown 한 파일이며 실행마다 새 출력 디렉터리에 둔다. Terra(`gpt-6.1-terra`)가 쓰고 Claude Opus 5.5가 비평하고 Terra가 확정하며, 같은 리비전을 두고 최대 3라운드까지 주고받는다.
+- **대상은 사용자가 고른다.** 초안을 본 뒤 ChatGPT Pages, Claude artifact, 둘 다 중에서 고른다. 처음 요청에 발행과 대상이 명시돼 있으면 다시 묻지 않는다.
+- **읽어서 확인해야 완료다.** 발행 후 다시 읽어 정본 리비전(sha256)과 맞을 때만 `verified`로 기록하고 완료를 알린다. 저장만 됐거나(`saved`) 일부만 됐거나(`partial`) 결과를 모르면(`unknown`) 그대로 알린다.
+- **기록은 정본 옆에 남는다.** ho 밖에서는 `report.md` 옆 `report.publish.json`(Site는 프로젝트 폴더 옆 `<폴더>.publish.json`)에 대상별 ID·URL·버전·상태를, ho 안에서는 ho journal에 남긴다. 원고 리비전(`sha256`)과 함께 그림까지 포함한 실제 입력의 digest(`input`)를 기록하므로, 그림만 바뀌어도 다시 발행한다. 결과를 모르는 갱신이 ID를 돌려주지 않아도 이미 아는 ID는 지워지지 않는다. 결과를 모르면 다시 만들기 전에 목록에서 찾아 중복 생성을 막고, 둘 중 한쪽만 실패했으면 그쪽만 다시 한다. 중복을 찾아도 자동으로 지우지 않는다.
+
 ## 사용 시작
+
+### Codex
+
+Codex는 사용자 스킬 디렉터리(`$CODEX_HOME/skills`, 기본 `~/.codex/skills`)에 두 스킬을 링크한다. 저장소 루트에서 실행한다.
+
+```sh
+python3 scripts/install.py codex --dry-run   # 계획만 출력
+python3 scripts/install.py codex
+```
+
+설치기는 이미 같은 곳을 가리키는 링크는 그대로 두고, 다른 곳을 가리키는 링크나 링크가 아닌 디렉터리가 있으면 아무것도 바꾸지 않고 종료 코드 1로 끝낸다. 직접 링크해도 된다.
+
+```sh
+ln -s "$PWD/plugins/ai-publish/skills/chatgpt-publish" ~/.codex/skills/chatgpt-publish
+ln -s "$PWD/plugins/ai-publish/skills/claude-artifact-publish" ~/.codex/skills/claude-artifact-publish
+```
+
+링크 대신 `cp -R`로 복사할 수도 있지만 저장소를 갱신할 때마다 다시 복사해야 한다. 두 스킬은 `../claude-artifact-publish/references/`로 서로를 참조하므로 항상 같은 디렉터리에 함께 둔다. 그림을 쓰려면 diagram-design도 `~/.codex/skills/diagram-design`에 둔다. Codex에서는 `$chatgpt-publish ./report.md를 비공개 ChatGPT Page로 발행해줘`처럼 부른다.
 
 ### Pi
 
@@ -48,7 +77,7 @@ claude plugin install ai-publish@ai-publish
 
 설치 명령은 Claude Code의 사용자 설정을 변경한다. 설치 후 새 세션에서 “이 파일을 Claude artifact로 올려줘” 또는 “이 보고서를 ChatGPT Page로 발행해줘”처럼 요청한다.
 
-`claude plugin marketplace add .`는 로컬 checkout의 변경을 시험하는 개발용이다. 공개 저장소에서 설치할 때는 위 GitHub 경로를 사용한다.
+`claude plugin marketplace add .`는 로컬 checkout의 변경을 시험하는 개발용이다. 공개 저장소에서 설치할 때는 위 GitHub 경로를 사용한다. 로컬 checkout을 원본으로 쓸 때는 `python3 scripts/install.py claude`가 마켓플레이스 추가, 플러그인 설치, 버전이 다를 때 `claude plugin update`를 한 번에 처리한다. `ai-publish` 마켓플레이스가 이미 다른 원본(GitHub나 다른 checkout)을 가리키면 바꾸지 않고 거부한다.
 
 diagram-design은 upstream의 특정 커밋으로 고정되어 있다. upstream 마켓플레이스판(`diagram-design@diagram-design`)을 이미 설치했다면 같은 스킬이 두 벌이 되므로 그쪽을 제거한다. `diagram-design@ai-publish`를 끄면 `ai-publish`도 불러오지 않는다.
 
@@ -62,29 +91,37 @@ omp plugin install ai-publish@ai-publish
 omp plugin install diagram-design@ai-publish
 ```
 
+로컬 checkout을 원본으로 쓸 때는 `python3 scripts/install.py omp`가 같은 일과 `omp plugin upgrade`를 처리한다. 세 대상을 한 번에 보려면 `python3 scripts/install.py codex claude omp --dry-run`을 실행한다. 설치기는 `npx` 설치를 실행하지 않고, 아무것도 지우지 않는다.
+
+### Herdr와 ho
+
+Herdr 안(TUI 패널은 `HERDR_ENV=1`, Herdr 앱 터미널은 `HC_TERMINAL_ID`)이고 `ho`가 설치돼 있으면, 자기 도구로 못 하는 발행을 ho에 맡긴다. Claude Code·omp의 Pages 발행은 Codex `publisher_pages` 워커가, Codex·omp의 artifact 발행은 Claude `publisher_artifact` 워커가 맡는다. ChatGPT Sites는 ho 대상이 아니므로 ho가 명시적으로 지원하기 전까지 Codex 도구나 `codex exec`로만 발행한다. 두 대상의 같은 리비전 여부는 정본의 sha256 64자 전체로 판단한다. 맡긴 요청은 바로 돌아오고 대화는 기다리지 않으며, ho 상태가 readback 확인을 보여 줄 때 완료다. 워커는 배정받은 발행만 직접 하고 다시 맡기지 않는다.
+
+ho는 별도 프로젝트이며 사용자는 Codex `$ho`, Claude `/ho`로 명시적으로 부른다. 제출·조회 명령의 정본은 설치된 ho 스킬과 `ho --help`다. 띄우는 에이전트의 기본 실행 옵션은 Codex `--yolo`, Claude `--permission-mode auto`이며 작업 폴더는 사용자가 고른 디렉터리다.
+
 ## 필요한 환경
 
 - **Claude artifact:** Node.js/npm의 `npx`, Claude Code, `claude /login` 완료(Pro/Max/Team/Enterprise). `claude-artifacts@0.1.14`, Markdown 변환용 `marked@18.1.1`·`marked-cjk-friendly@0.1.2`를 버전 고정해 `npx`로 받는다. 그림에는 diagram-design 스킬(위 설치 단계)과 SVG 추출용 `python3`가 필요하다.
-- **ChatGPT Page/Site:** Codex CLI, ChatGPT 계정으로 `codex login`, `apps=true`. Site에는 `sites@openai-curated-remote` 플러그인 활성화도 필요하다.
+- **ChatGPT Page/Site:** Codex CLI, ChatGPT 계정으로 `codex login`, `pages@openai-curated-remote`(Site는 `sites@openai-curated-remote`) 플러그인 설치·활성화. 예전 문서의 `apps=true` 전제는 codex-cli 0.161.0 시절 것이며 지금은 플러그인 상태와 실제 도구 목록으로 판단한다.
+- **Herdr 위임(선택):** Herdr TUI 패널(`HERDR_ENV=1`) 또는 Herdr 앱 터미널(`HC_TERMINAL_ID`)과 `PATH`의 `ho`. 백엔드는 ho가 고르고, 두 표시가 함께 있을 때만 `HO_BACKEND=tui|hc`로 정한다. 없으면 위 직접 경로를 쓴다.
 - **Pi에서 사용:** 위 서비스별 준비와 별개로 Pi가 설치되어 있어야 한다. 이 스킬 묶음 자체에는 빌드 단계나 서버가 없다.
 
 ChatGPT 쪽 전제조건은 다음 읽기 전용 명령으로 확인할 수 있다.
 
 ```sh
 codex --version
-codex features list | grep '^apps '
-codex plugin list --marketplace openai-curated-remote | grep '^sites@openai-curated-remote '
+codex plugin list --marketplace openai-curated-remote | grep -E '^(pages|sites)@openai-curated-remote '
 ```
 
-승인 동작의 실측 기준은 `codex-cli 0.161.0`이다. 다른 버전에서는 스킬 문서의 동작이 달라질 수 있다.
+승인 동작 실측(`codex-cli 0.161.0`, 기본 승인 정책)은 과거 기록이다. 2026-10-30에 codex-cli 0.165.0에서 도움말·플러그인 상태만 다시 확인했고 발행 동작은 다시 재지 않았다.
 
 ## 제약과 안전
 
 - **사외 반출:** 발행 전에 개인정보·비밀값·내부 전용 데이터를 제거한다. 토큰을 프롬프트·로그·저장소에 넣지 않는다.
 - **Claude는 비공식 연동:** CLI가 macOS Keychain의 `Claude Code-credentials` 또는 `CLAUDE_CODE_OAUTH_TOKEN`을 읽어 비공식 API를 호출한다. Anthropic의 변경으로 깨질 수 있으며 공식 연동을 보장하지 않는다.
 - **artifact는 단일 문서:** 자체 완결 HTML과 인라인 CSS/JS를 우선한다. 백엔드·다중 라우트는 지원하지 않고 외부 CDN은 뷰어 CSP에 막힐 수 있다. 조직/공개 공유는 브라우저의 **Share**에서 처리한다.
-- **추가 모델 호출:** ChatGPT 발행은 `codex exec` 모델 턴 1회를 사용한다. Claude의 정상 CLI 경로에는 별도 LLM 턴이 없지만, 실패 시 `claude -p` 대안은 별도 모델 호출이다.
-- **샌드박스와 원격 작업은 별개:** Pages의 `read-only`는 원격 페이지 생성을 막지 않는다. Sites는 대상 프로젝트에 `.openai/hosting.json`을 작성하므로 `workspace-write`를 사용한다.
+- **추가 모델 호출:** Codex가 아닌 호스트의 ChatGPT 발행은 `codex exec` 또는 ho 워커의 모델 턴을 쓴다. Claude의 정상 CLI 경로에는 별도 LLM 턴이 없지만, 실패 시 `claude -p` 대안은 별도 모델 호출이다.
+- **실행 권한:** Codex 실행 기본값은 `--yolo`(= `--dangerously-bypass-approvals-and-sandbox`, 2026-10-30 사용자 결정)라 승인과 셸 샌드박스가 꺼진다. 그래서 프롬프트에서 지정 파일·지정 도구로 좁히고 삭제·공유 변경 도구를 금지한다. Claude 실행은 `--permission-mode auto`이며 `bypassPermissions`는 쓰지 않는다. 결과는 `--output-schema`와 `-o`로 받은 JSON 파일과 종료 코드로 판단한다.
 - **공유 범위:** 새 Claude artifact는 본인만, 새 Site는 소유자와 워크스페이스 관리자가 볼 수 있다. 비공개가 “어떤 다른 사용자도 접근할 수 없음”을 뜻하는 것은 아니다.
 - **파괴적 작업:** ChatGPT의 삭제·공유 변경은 사람이 UI나 대화형 Codex에서 처리한다. 승인 우회를 기본 사용법으로 삼지 않는다. 검증 목적으로 생성·삭제·공유 변경을 실행하지 않는다.
 
@@ -106,8 +143,9 @@ codex plugin list --marketplace openai-curated-remote | grep '^sites@openai-cura
 
 ## 상세 절차와 개발
 
-- [Claude artifact 스킬](plugins/ai-publish/skills/claude-artifact-publish/SKILL.md): 생성·갱신·조회·삭제 명령, 인증과 공유 제약.
-- [ChatGPT Pages/Sites 스킬](plugins/ai-publish/skills/chatgpt-publish/SKILL.md): 발행 명령, 결과 형식, 승인 동작.
+- [Claude artifact 스킬](plugins/ai-publish/skills/claude-artifact-publish/SKILL.md): 호스트별 경로, 생성·갱신·조회·삭제 명령, readback 확인, 인증과 공유 제약.
+- [ChatGPT Pages/Sites 스킬](plugins/ai-publish/skills/chatgpt-publish/SKILL.md): 호스트별 경로, 발행 명령, 결과 형식, 승인 동작.
+- [발행 공통 절차](plugins/ai-publish/skills/claude-artifact-publish/references/publish-flow.md): ho 위임, 작성 흐름, 영수증과 상태, 재시도·재조회.
 - [Repository Guidelines](AGENTS.md): 저장소 구조와 매니페스트·스킬 정합성 검사.
 
 CLI 발행 명령의 정본은 각 `SKILL.md`다. 저장소 메타데이터의 기본 검증은 다음과 같다. 현재 `author` 누락 경고 1건이 있으며 `--strict`는 이 경고로 실패한다.
@@ -115,4 +153,5 @@ CLI 발행 명령의 정본은 각 `SKILL.md`다. 저장소 메타데이터의 �
 ```sh
 claude plugin validate .
 claude plugin validate plugins/ai-publish
+python3 -m unittest discover -s scripts -v   # 설치기 계획, 영수증 병합·입력 digest, zsh 호출 회귀(node·zsh·git 필요, 네트워크 없음)
 ```

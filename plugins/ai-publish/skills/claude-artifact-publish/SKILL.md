@@ -1,29 +1,49 @@
 ---
 name: claude-artifact-publish
-description: 로컬 HTML·Markdown·CSV·JSON·YAML 파일을 claude.ai Claude Code artifact(claude.ai/code/artifact/<id>)로 발행·갱신·조회·삭제할 때 사용. "artifact로 올려줘", "claude 링크로 공유" 요청. Markdown 문서는 읽기용 페이지로 변환해 올리고, 그림은 diagram-design으로 그려 넣는다.
+description: 로컬 HTML·Markdown·CSV·JSON·YAML 파일을 claude.ai Claude Code artifact(claude.ai/code/artifact/ID)로 발행·갱신·조회·삭제할 때 사용. "artifact로 올려줘", "claude 링크로 공유", "Pages랑 artifact 둘 다" 요청. Claude Code는 네이티브 Artifact 도구가 실제로 있을 때만 그것을, 없으면 버전 고정 claude-artifacts CLI를 쓰고, Codex·omp·Pi는 Herdr의 ho로 Claude에 맡기거나 같은 CLI를 쓴다. Markdown 문서는 읽기용 페이지로 변환해 올리고, 그림은 diagram-design으로 그려 넣는다.
 ---
 
-# Claude artifact 발행 (omp)
+# Claude artifact 발행
 
-omp에는 Claude Code의 내장 `Artifact` 도구가 없다. 대신 `claude-artifacts` CLI(비공식, MIT)를 쓴다.
-이 CLI는 **로컬 Claude Code 로그인 토큰**(macOS Keychain `Claude Code-credentials`, 또는 `CLAUDE_CODE_OAUTH_TOKEN`)으로
-`api.anthropic.com/api/frame` 을 직접 호출한다. LLM 턴을 쓰지 않는다.
+정본 리비전, 영수증, 재시도·재조회, ho 위임, 문서 작성 흐름은 이 스킬의 `references/publish-flow.md`(이하 "공통 절차")를 따른다. `chatgpt-publish`도 같은 파일을 쓴다.
 
-- 전제: `claude /login` 완료(Pro/Max/Team/Enterprise).
-- 비공식 엔드포인트라 Anthropic 쪽 변경 시 깨질 수 있다. 실패하면 대안: `claude -p "<file> 를 artifact로 발행해줘"`.
+## 경로 고르기
+
+위에서부터 처음 맞는 줄을 쓴다.
+
+| 상황 | 경로 |
+|---|---|
+| ho 워커로 `publisher_artifact`를 배정받았다 | 네이티브 `Artifact` 도구가 있으면 그것, 없으면 CLI로 직접 한다. ho·`claude -p`로 다시 넘기지 않는다 |
+| 내 도구 목록에 `Artifact` 도구가 있다 | "네이티브 Artifact" |
+| Claude Code인데 `Artifact` 도구가 없다 | CLI. 다른 Claude에 넘기지 않는다 |
+| Codex·omp·Pi이고 Herdr 안(공통 절차 2절의 표시), `ho` 있음 | ho에 맡긴다(공통 절차 2절). coordinator가 `publisher_artifact`로 배정한다 |
+| 그 밖 | CLI |
+
+`Artifact` 도구는 Claude Code에서도 버전·계정·실행 방식에 따라 제공되지 않을 수 있고, Codex·omp·Pi에는 없다. 도구 목록에 없으면 지원되지 않는 것이다. 이름을 맞춰 호출해 보거나 다른 세션에 있을 거라고 가정하지 않는다.
 
 ## 명령 (버전 고정)
 
+CLI는 `claude-artifacts`(비공식, MIT)다. **로컬 Claude Code 로그인 토큰**(macOS Keychain `Claude Code-credentials`, 또는 `CLAUDE_CODE_OAUTH_TOKEN`)으로 `api.anthropic.com/api/frame`을 직접 호출하며 LLM 턴을 쓰지 않는다.
+
+- 전제: `claude /login` 완료(Pro/Max/Team/Enterprise).
+- 토큰 값은 출력하거나 명령줄·로그·영수증에 적지 않는다. `CLAUDE_CODE_OAUTH_TOKEN`은 환경에 이미 있을 때만 쓴다.
+
 ```sh
-A="npx -y claude-artifacts@0.1.14"
-$A create page.html --title "제목" [--favicon "📊"] [--label v1]   # 새 artifact, URL 출력
-$A update <id|url> page.html [--title ...] [--base-version <n>]    # 같은 URL에 새 버전
-$A list --limit 20 --output json                                   # 내 artifact 목록
-$A read <id|url> --content                                         # 배포된 HTML 받기
-$A delete <id|url>
+A() { npx -y claude-artifacts@0.1.14 "$@"; }   # 셸 함수. 명령을 변수에 담아 펼치면 zsh는 통째로 명령 이름 하나로 읽어 실패한다
+A create page.html --title "제목" [--favicon "📊"] [--label v1] --output json   # artifact_id, artifact_url, version
+A update <id|url> page.html [--title ...] [--base-version <n>] --output json    # 같은 URL에 새 버전
+A list --limit 20 --output json      # title, label, updated_at. owner_email도 나오므로 그대로 옮기지 않는다
+A read <id|url> --content --output json   # version, share_mode, content_html. author_email도 나온다
+A delete <id|url>                    # 사용자가 요청한 경우에만. 자동 정리에 쓰지 않는다
 ```
 
-출력 기본은 사람용, 파싱할 땐 `--output json`.
+출력 기본은 사람용이고, 파싱할 땐 `--output json`을 쓴다.
+
+비공식 엔드포인트라 Anthropic 쪽 변경 시 깨질 수 있다. 깨졌을 때 Claude가 아닌 호스트에서 ho 워커가 아니면 다음 대안을 쓴다. 사용자가 고른 작업 폴더에서 실행하며 그 폴더를 신뢰한다. Claude 실행은 `--permission-mode auto`가 기본이고(2026-10-30 사용자 결정) `bypassPermissions`·`--dangerously-skip-permissions`는 쓰지 않는다. Claude 호스트나 ho 워커라면 대안 대신 `failed`나 `unknown`으로 보고한다.
+
+```sh
+(cd <작업 폴더> && claude -p --permission-mode auto "<정본 경로>를 비공개 Claude artifact로 발행하고 artifact URL과 readback 결과만 출력해줘")
+```
 
 ## 문서 발행 (Markdown → 읽기용 페이지)
 
@@ -31,18 +51,49 @@ $A delete <id|url>
 
 CLI는 `<!doctype html>`로 시작하는 파일을 바꾸지 않고 올린다. 그래서 본문을 HTML로 변환해 이 스킬의 `assets/page.html` 뒤에 붙여 올린다. `page.html`은 읽기용 글꼴 크기·줄 간격·폭, 다크 모드, 표만 가로로 스크롤, 목차를 맡는다. 목차는 소제목이 3개 이상일 때 생기며, 넓은 화면에서는 왼쪽에 고정되어 읽는 위치를 표시하고, 좁은 화면에서는 오른쪽 아래 목차 버튼을 누르면 바텀시트로 열린다. 경로는 이 스킬 디렉터리 기준이다.
 
+변환물은 실행마다 새 디렉터리에 만든다. 먼저 정본과 그 정본이 참조하는 그림을 그 디렉터리로 고정(`freeze`)하고, 고정한 사본만 변환한다. 원본 파일은 고치지 않는다.
+
 ```sh
-S=<이 스킬 디렉터리>
-cd <Markdown이 있는 폴더>   # ![…](그림.svg) 경로의 기준
-npx -y -p marked@18.1.1 -p marked-cjk-friendly@0.1.2 marked -c "$S/assets/marked.config.mjs" -i report.md -o /tmp/report.body.html
-cat "$S/assets/page.html" /tmp/report.body.html > /tmp/report.html
-$A create /tmp/report.html --title "<문서의 H1>" --label "<YYYY-MM-DD>"
+S=<이 스킬 디렉터리의 절대 경로>
+R=$(mktemp -d "${TMPDIR:-/tmp}/artifact-publish.XXXXXX")
+node "$S/scripts/receipt.mjs" freeze <정본 폴더>/report.md "$R"   # sha256·input. 공통 절차 4절로 영수증과 비교한다
+cd "$R"   # 고정한 사본 기준. ![…](그림.svg) 경로도 여기서 읽는다
+npx -y -p marked@18.1.1 -p marked-cjk-friendly@0.1.2 marked -c "$S/assets/marked.config.mjs" -i report.md -o report.body.html
+cat "$S/assets/page.html" report.body.html > report.html
+A create "$R/report.html" --title "<문서의 H1>" --label "<YYYY-MM-DD> <sha256 앞 12자>" --output json
 ```
 
 - 문서는 `# 제목` 하나로 시작한다. `--title`을 빼면 파일 이름이 갤러리 제목이 된다.
-- 갱신은 같은 변환 뒤 `$A update <id|url> /tmp/report.html --label …`.
+- `create`·`update` 직전에 영수증(ho 워커면 ho 보고)에 `pending`과 sha256·input·제목·라벨을 남긴다(공통 절차 4절의 `merge`).
+- `--label`의 sha256 앞 12자는 재조회 때 `list`에서 후보를 찾는 표시일 뿐이다. 같은 발행물인지는 영수증의 64자 전체 sha256·input과 readback으로 판단한다.
+- 갱신은 같은 변환 뒤 `A update <id|url> "$R/report.html" --label … --output json`이다. 영수증에 ID가 있으면 `create`하지 않는다.
 - HTML을 직접 쓸 때도 `page.html` 뒤에 본문을 이어 쓴다. 대시보드처럼 레이아웃이 다른 페이지만 예외다.
 - 코드 블록은 문법 강조 없이 단색으로 나온다.
+
+### 확인 (readback)
+
+`create`·`update`가 돌려준 `artifact_id`·`artifact_url`·`version`을 `saved`로 남긴 뒤 다시 읽는다. 올린 HTML과 바이트가 같으면 `verified`다. 출력에는 version·share_mode·일치 여부만 남기고, 이메일이 든 `readback.json`은 보여 주지 않는다.
+
+```sh
+A read <artifact_id> --content --output json > "$R/readback.json"
+node -e '
+const fs = require("node:fs"), [rb, sent] = process.argv.slice(1), r = JSON.parse(fs.readFileSync(rb, "utf8"));
+const same = r.content_html === fs.readFileSync(sent, "utf8");
+console.log(JSON.stringify({ version: r.version, share_mode: r.share_mode, same }));
+process.exit(same ? 0 : 1);
+' "$R/readback.json" "$R/report.html"
+```
+
+- version이 `create`·`update` 결과와 다르면 다른 쓰기가 끼어든 것이다. `verified`로 두지 않고 사용자에게 알린다.
+- `create` 결과 없이 끝났으면(시간 초과 등) `unknown`이다. 다시 만들기 전에 `A list --limit 20 --output json`에서 같은 제목·라벨을 찾는다(공통 절차 5절).
+
+## 네이티브 Artifact (도구가 있을 때만)
+
+1. 위 "문서 발행"과 같은 변환으로 `$R/report.html`을 만든다. 템플릿과 한국어 처리, diagram-design 그림은 그대로다.
+2. `Artifact` 도구로 `$R/report.html`을 publish한다. 페이지에 `<title>`이 없으므로 `title`에 문서의 H1을 준다. 도구 설명이 요구하는 절차(스킬 로드, 아이콘 등)는 그 설명대로 따른다.
+3. 결과의 URL을 `saved`로 남긴다. 버전이 결과에 없으면 version은 null이다.
+4. 같은 도구의 `read`로 다시 읽어 올린 HTML과 맞으면 `verified`다.
+5. 갱신은 같은 `url`로 publish한다. 이전 대화에서 만든 artifact면 도구 설명대로 먼저 `read`한다.
 
 ## 긴 문서는 인포그래픽으로
 
@@ -103,7 +154,7 @@ $A create /tmp/report.html --title "<문서의 H1>" --label "<YYYY-MM-DD>"
 
 구조·흐름·관계·수치를 보여 줄 그림은 diagram-design 스킬로 그린다. 스킨은 이 스킬의 `assets/page.html`과 색·글꼴이 같은 diagram-design 프로필 `ai-publish`다(2026-10-13 사용자 결정, `~/.diagram-design/profiles/ai-publish.md`). 아티팩트용 그림에서는 첫 다이어그램 스킨 질문을 다시 하지 않는다.
 
-- diagram-design은 ai-publish의 의존성이다. Claude Code는 `ai-publish@ai-publish`를 설치할 때 이 마켓플레이스에 커밋으로 고정된 `diagram-design@ai-publish`를 함께 설치한다. omp는 의존성을 자동 설치하지 않으므로 `omp plugin install diagram-design@ai-publish`로, Pi는 `pi install https://github.com/cathrynlavery/diagram-design`로 따로 설치한다.
+- diagram-design은 ai-publish의 의존성이다. Claude Code는 `ai-publish@ai-publish`를 설치할 때 이 마켓플레이스에 커밋으로 고정된 `diagram-design@ai-publish`를 함께 설치한다. omp는 의존성을 자동 설치하지 않으므로 `omp plugin install diagram-design@ai-publish`로, Pi는 `pi install https://github.com/cathrynlavery/diagram-design`로, Codex는 사용자 스킬 디렉터리(`~/.codex/skills/diagram-design`)에 따로 둔다.
 - diagram-design의 `references/style-guide.md` 맨 앞 프로필 헤더가 `slug: ai-publish`가 아니면(스킬 업데이트로 초기화 등) 그 스킬의 `load ai-publish`로 되돌린 뒤 그린다.
 - 프로필이 없는 환경에서는 diagram-design 온보딩의 로컬 폴더 방식으로 이 스킬의 `assets/`를 지정해 만들고 `ai-publish`로 저장한다. `page.html`에 없는 역할은 soft `#8b867d`/`#868075`, rule-solid `#c6c4c0`/`rgba(167,162,154,0.25)`이고, link와 제목·콜아웃 글꼴(Instrument Serif)은 기본값을 둔다.
 
@@ -124,11 +175,14 @@ $A create /tmp/report.html --title "<문서의 H1>" --label "<YYYY-MM-DD>"
 
 ## 공유
 
-- 새 artifact는 **본인만** 볼 수 있다. 조직/공개 공유는 브라우저에서 페이지 헤더 **Share**로만 한다(CLI 미지원).
+- 새 artifact는 **본인만** 볼 수 있다. 조직/공개 공유는 사용자가 명시적으로 요청했을 때 브라우저에서 페이지 헤더 **Share**로만 한다(CLI 미지원). 자동 발행에서 공유 범위를 바꾸지 않는다.
+- readback의 `share_mode`가 발행 전과 달라졌으면 사용자에게 알린다.
 - 갤러리: https://claude.ai/code/artifacts
 
 ## 발행 전 필수 점검
 
 - 발행은 사외 서비스로의 반출이다. 개인정보(연락처·이메일·계좌·주민번호·건강정보 등), 비밀값, 내부 전용 데이터가 페이지에 없는지 확인한다.
+- 사용자가 발행을 요청했는지 확인한다. 작성 요청만으로는 발행하지 않는다.
+- `freeze`의 sha256·input과 영수증(또는 ho journal)을 확인한다. `verified`이고 둘 다 같으면 다시 보내지 않고, ID가 있으면 `update`하고, `pending`·`unknown`이면 재조회부터 한다.
 - 공개 링크 공유는 사용자가 명시적으로 요청한 경우에만 안내한다.
-- 변환한 `/tmp/report.html`을 브라우저로 열어 표·그림·목차가 깨지지 않았는지 본 뒤 올린다.
+- 변환한 `$R/report.html`을 브라우저로 열어 표·그림·목차가 깨지지 않았는지 본 뒤 올린다.

@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["state", "target", "id", "url", "version", "evidence", "note"],
+  "properties": {
+    "state": { "type": "string", "enum": ["verified", "saved", "partial", "unknown", "failed"] },
+    "target": { "type": "string", "enum": ["pages", "sites"] },
+    "id": { "type": ["string", "null"] },
+    "url": { "type": ["string", "null"] },
+    "version": { "type": ["string", "null"] },
+    "evidence": { "type": ["string", "null"] },
+    "note": { "type": ["string", "null"] }
+  }
+}
